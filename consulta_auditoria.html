@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Auditoria de Peso</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.4/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/2.0.8/css/dataTables.dataTables.min.css">
+    <script type="text/javascript" src="https://cdn.datatables.net/2.0.8/js/dataTables.min.js"></script>
+
+    <style>
+        :root {
+            --primary-color: #007bff;
+            --secondary-color: #28a745;
+            --warning-color: #ffc107;
+            --info-color: #17a2b8;
+            --danger-color: #dc3545;
+            --text-dark: #343a40;
+            --bg-light: #f8f9fa;
+            --highlight-weight: #e9f5e9;
+            --audit-color: #ff8c00;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: var(--bg-light);
+            color: var(--text-dark);
+        }
+        .container {
+            max-width: 1200px;
+            margin: auto;
+            background: #ffffff;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            color: var(--primary-color);
+            border-bottom: 2px solid #eee;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        h2 {
+            color: var(--text-dark);
+            margin-top: 0;
+        }
+
+        button:not(.tab-button) {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            background-color: var(--primary-color);
+            color: white;
+            box-shadow: 0 4px 8px rgba(0, 123, 255, 0.3);
+            transition: background-color 0.3s, box-shadow 0.3s, transform 0.1s;
+        }
+        button:not(.tab-button):hover {
+            background-color: #0056b3;
+            transform: translateY(-1px);
+            box-shadow: 0 6px 10px rgba(0, 123, 255, 0.4);
+        }
+        button:not(.tab-button):disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        .tabs {
+            display: flex;
+            margin-bottom: 0;
+            border-bottom: 2px solid #ddd;
+        }
+        .tab-button {
+            background-color: #eee;
+            border: none;
+            padding: 12px 25px;
+            cursor: pointer;
+            margin-right: 5px;
+            border-radius: 8px 8px 0 0;
+            font-weight: 600;
+            color: var(--text-dark);
+            position: relative;
+            top: 2px;
+            transition: background-color 0.3s;
+        }
+        .tab-button.active {
+            background-color: var(--primary-color);
+            color: white;
+            border-bottom: none;
+            z-index: 1;
+            box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+        }
+        #btn-auditoria.active {
+            background-color: var(--audit-color) !important;
+        }
+        .tab-content {
+            padding: 25px;
+            border: 1px solid #ddd;
+            border-top: none;
+            border-radius: 0 0 10px 10px;
+            background: #fff;
+            min-height: 250px;
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+
+        .file-upload-section {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+            gap: 20px;
+        }
+        .file-upload-container {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        .file-upload-label {
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+        .file-input-wrapper {
+            position: relative;
+            display: inline-block;
+            overflow: hidden;
+            width: 100%;
+        }
+        .file-input-wrapper input[type="file"] {
+            position: absolute;
+            left: 0;
+            top: 0;
+            opacity: 0;
+            cursor: pointer;
+            width: 100%;
+            height: 100%;
+        }
+        .custom-file-upload {
+            background-color: #f0f0f0;
+            color: var(--text-dark);
+            border: 1px solid #ccc;
+            display: block;
+            text-align: center;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            padding: 10px 15px;
+        }
+        .custom-file-upload i {
+            margin-right: 8px;
+        }
+        .file-name-display {
+            font-size: 0.9em;
+            color: var(--primary-color);
+            margin-top: 5px;
+            min-height: 1.2em;
+        }
+        
+        .status-message {
+            margin-top: 25px;
+            padding: 12px;
+            border-radius: 6px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+        }
+        .status-message.success {
+            background-color: #d4edda;
+            color: var(--secondary-color);
+        }
+        .status-message.error {
+            background-color: #f8d7da;
+            color: var(--danger-color);
+        }
+        .status-message i {
+            margin-right: 10px;
+        }
+
+        .search-controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 25px;
+            align-items: center;
+        }
+        .search-controls input {
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            flex-grow: 1;
+            font-size: 1em;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            font-size: 0.85em;
+        }
+        th, td {
+            border: 1px solid #e9ecef;
+            padding: 10px;
+            text-align: left;
+            vertical-align: middle;
+        }
+        th {
+            padding-top: 15px;
+            padding-bottom: 15px;
+            font-weight: 700;
+            text-align: center;
+            text-transform: uppercase;
+        }
+        
+        .header-artigos { background-color: var(--warning-color); color: var(--text-dark); }
+        .header-mara { background-color: var(--info-color); color: white; }
+        .header-audit { background-color: var(--audit-color); color: white; }
+        .header-weight { background-color: var(--secondary-color) !important; color: white !important; }
+
+        #resultado-consulta tbody td:nth-child(-n + 7) { background-color: #fffbe8; } 
+        #resultado-consulta tbody td:nth-child(n + 8) { background-color: #e6f7ff; color: #0056b3; }
+        
+        #resultado-consulta tbody td:nth-child(7),
+        #resultado-consulta tbody td:nth-child(11),
+        #resultado-consulta tbody td:nth-child(12) {
+            background-color: var(--highlight-weight) !important; 
+            font-weight: bold;
+        }
+        
+        #auditoria-tabela th {
+            background-color: var(--audit-color);
+            color: white;
+        }
+        #auditoria-tabela td {
+            background-color: #fff8f0;
+        }
+        .audit-diff {
+            background-color: #ffcccc !important;
+            font-weight: bold;
+            color: var(--danger-color);
+        }
+        
+        div.dataTables_wrapper {
+            margin-top: 0 !important;
+        }
+        div.dataTables_wrapper div.dataTables_filter input {
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            padding: 5px 10px;
+            width: 250px;
+            margin-left: 5px;
+        }
+        div.dataTables_wrapper div.dataTables_length select {
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            padding: 5px;
+        }
+        
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>Sistema de Consulta de Peso Incorreto <i class="fas fa-boxes"></i></h1>
+        <p>Carregue os arquivos e consulte o código do material para comparar os dados.</p>
+
+        <div class="tabs">
+            <button class="tab-button active" onclick="openTab(event, 'carregamento')">1. Carregamento de Arquivos</button>
+            <button class="tab-button" onclick="openTab(event, 'consulta')" id="btn-consulta" disabled>2. Consulta de Materiais</button>
+            <button class="tab-button" onclick="openTab(event, 'auditoria')" id="btn-auditoria" disabled>3. Verificação de Pesos</button>
+        </div>
+
+        <div id="carregamento" class="tab-content active">
+            <h2><i class="fas fa-upload"></i> Upload de Dados</h2>
+            
+            <div class="file-upload-section">
+                <div class="file-upload-container">
+                    <label class="file-upload-label" for="file-artigos">Arquivo <strong>Artigos</strong> (CSV):</label>
+                    <div class="file-input-wrapper">
+                        <button class="custom-file-upload"><i class="fas fa-file-csv"></i> Escolher arquivo CSV</button>
+                        <input type="file" id="file-artigos" accept=".csv" required onchange="updateFileName('file-artigos', 'file-artigos-name')">
+                    </div>
+                    <div class="file-name-display" id="file-artigos-name">Nenhum arquivo selecionado.</div>
+                </div>
+            </div>
+
+            <div class="file-upload-section">
+                <div class="file-upload-container">
+                    <label class="file-upload-label" for="file-mara">Arquivo <strong>MARA</strong> (Excel):</label>
+                    <div class="file-input-wrapper">
+                        <button class="custom-file-upload"><i class="fas fa-file-excel"></i> Escolher arquivo XLSX</button>
+                        <input type="file" id="file-mara" accept=".xlsx" required onchange="updateFileName('file-mara', 'file-mara-name')">
+                    </div>
+                    <div class="file-name-display" id="file-mara-name">Nenhum arquivo selecionado.</div>
+                </div>
+            </div>
+
+            <button onclick="processarArquivos()"><i class="fas fa-play-circle"></i> Processar e Cruzar Dados</button>
+            
+            <div id="status-carregamento" class="status-message success">
+                <i class="fas fa-hourglass-start"></i> Aguardando carregamento dos arquivos...
+            </div>
+            <div class="status-message error" id="error-message" style="display: none;"></div>
+        </div>
+
+        <div id="consulta" class="tab-content">
+            <h2><i class="fas fa-search"></i> Consulta de Material (Nº de artigo)</h2>
+            <div class="search-controls">
+                <input type="text" id="input-material" placeholder="Digite o Nº de artigo (Ex: 1005 ou 01005)">
+                <button onclick="consultarMaterial()"><i class="fas fa-search"></i> Buscar</button>
+            </div>
+
+            <div id="resultado-consulta">
+                </div>
+        </div>
+        
+        <div id="auditoria" class="tab-content">
+            <h2><i class="fas fa-balance-scale-right"></i> Verificação de Pesos Distintos</h2>
+            <p>Lista todos os materiais onde <strong>Peso (Artigos)</strong> é diferente de <strong>Peso bruto (MARA)</strong>.</p>
+            <div id="resultado-auditoria">
+                <p class="status-message error"><i class="fas fa-info-circle"></i> Os dados serão gerados após o processamento dos arquivos na primeira aba.</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let dadosArtigos = [];
+        let dadosMaraMap = {}; 
+        let resultadosAuditoria = []; 
+        let dataTableAuditoria = null;
+        
+        const SKU_LENGTH = 5; 
+        const TOLERANCE_AUDIT = 0.01;
+
+        const COLUNAS_ARTIGOS = [
+            'Nº de artigo', 'QTY NA CAIXA', 'Descrição do artigo', 'Comprimento', 'Largura', 'Altura do artigo', 'Peso'
+        ];
+        const COLUNAS_MARA = [
+            'Última modificação', 'Modificado por', 'Material básico', 'Peso bruto', 'Peso líquido', 'Unidade de peso', 'Volume', 'Unidade de volume', 'Cmpr.', 'Largura', 'Altura'
+        ];
+        const MAP_ARTIGOS = { 'Nº de artigo': 'Nº de artigo', 'Peso': 'Peso' };
+        const MAP_MARA = { 'Material': 'Material', 'Peso bruto': 'Peso bruto' };
+        const WEIGHT_HEADERS = ['Peso', 'Peso bruto', 'Peso líquido'];
+        
+        
+        function updateFileName(inputId, displayId) {
+            const input = document.getElementById(inputId);
+            const display = document.getElementById(displayId);
+            const button = input.previousElementSibling; 
+
+            if (input.files.length > 0) {
+                const fileName = input.files[0].name;
+                display.textContent = `Arquivo carregado: ${fileName}`;
+                button.innerHTML = `<i class="fas fa-check-circle"></i> ${fileName}`;
+                button.style.backgroundColor = '#d4edda';
+            } else {
+                display.textContent = 'Nenhum arquivo selecionado.';
+                button.innerHTML = `<i class="fas fa-file-upload"></i> Escolher arquivo...`;
+                button.style.backgroundColor = '#f0f0f0';
+            }
+        }
+
+        function formatarSKU(code) {
+            if (code === null || code === undefined || code === '') return '';
+            const codeString = String(code).trim();
+            return codeString.padStart(SKU_LENGTH, '0');
+        }
+
+        function openTab(evt, tabName) {
+            let i, tabcontent, tablinks;
+            tabcontent = document.getElementsByClassName("tab-content");
+            for (i = 0; i < tabcontent.length; i++) {
+                tabcontent[i].style.display = "none";
+            }
+            tablinks = document.getElementsByClassName("tab-button");
+            for (i = 0; i < tablinks.length; i++) {
+                tablinks[i].className = tablinks[i].className.replace(" active", "");
+            }
+            document.getElementById(tabName).style.display = "block";
+            
+            if (evt) {
+                evt.currentTarget.className += " active";
+            } else {
+                document.getElementById('btn-' + tabName).className += " active";
+            }
+        }
+
+        async function processarArquivos() {
+            const fileArtigos = document.getElementById('file-artigos').files[0];
+            const fileMara = document.getElementById('file-mara').files[0];
+            const statusElement = document.getElementById('status-carregamento');
+
+            statusElement.className = "status-message success";
+            statusElement.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Iniciando processamento...`;
+            document.getElementById('btn-consulta').disabled = true;
+            document.getElementById('btn-auditoria').disabled = true;
+
+            if (!fileArtigos || !fileMara) {
+                statusElement.className = "status-message error";
+                statusElement.innerHTML = `<i class="fas fa-exclamation-triangle"></i> Por favor, selecione ambos os arquivos (.csv e .xlsx).`;
+                return;
+            }
+
+            try {
+                statusElement.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Carregando dados de Artigos (CSV)...`;
+                dadosArtigos = await carregarCSV(fileArtigos);
+                if (!dadosArtigos[0] || !dadosArtigos[0][MAP_ARTIGOS['Nº de artigo']]) { throw new Error("O arquivo 'artigos.csv' deve conter a coluna 'Nº de artigo'."); }
+
+                statusElement.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Carregando e indexando dados de MARA (Excel)...`;
+                const dadosMara = await carregarExcel(fileMara);
+                if (!dadosMara[0] || !dadosMara[0][MAP_MARA['Material']]) { throw new Error("O arquivo 'mara.xlsx' deve conter a coluna 'Material'."); }
+                
+                dadosMaraMap = indexarMara(dadosMara);
+
+                statusElement.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Realizando auditoria de pesos...`;
+                // Utilizando a função assíncrona para não travar a UI (mesmo que seja um loop simples, introduz a pausa)
+                resultadosAuditoria = await auditarPesosAsync(); // ALTERAÇÃO AQUI: Usando função assíncrona
+
+                statusElement.className = "status-message success";
+                statusElement.innerHTML = `<i class="fas fa-check-circle"></i> Dados carregados e auditados com sucesso! Artigos: ${dadosArtigos.length.toLocaleString()} | Materiais com Diferença: ${resultadosAuditoria.length.toLocaleString()}`;
+                
+                document.getElementById('btn-consulta').disabled = false;
+                document.getElementById('btn-auditoria').disabled = false;
+                
+                exibirAuditoria();
+                
+                openTab(null, 'auditoria'); 
+
+            } catch (error) {
+                statusElement.className = "status-message error";
+                statusElement.innerHTML = `<i class="fas fa-times-circle"></i> Falha no Carregamento: ${error.message}`;
+            }
+        }
+
+        // Função para introduzir uma pausa não bloqueante
+        const yieldToBrowser = () => new Promise(resolve => setTimeout(resolve, 0));
+
+        // NOVA FUNÇÃO: auditarPesos Assíncrona para evitar travamento da UI
+        async function auditarPesosAsync() {
+            const resultados = [];
+            const pesoArtigoKey = MAP_ARTIGOS['Peso'];
+            const pesoBrutoMaraKey = MAP_MARA['Peso bruto'];
+            const skusProcessados = new Set();
+            const CHUNK_SIZE = 1000; // Processar 1000 itens por vez
+
+            for (let i = 0; i < dadosArtigos.length; i++) {
+                const artigo = dadosArtigos[i];
+                const artigoCode = formatarSKU(artigo[MAP_ARTIGOS['Nº de artigo']]);
+                
+                if (skusProcessados.has(artigoCode)) {
+                    continue; 
+                }
+                skusProcessados.add(artigoCode);
+
+                const maraRegistro = dadosMaraMap[artigoCode];
+
+                if (maraRegistro) {
+                    const pesoArtigo = parseFloat(String(artigo[pesoArtigoKey] || 0).replace(',', '.'));
+                    const pesoBruto = parseFloat(String(maraRegistro[pesoBrutoMaraKey] || 0).replace(',', '.'));
+
+                    if (Math.abs(pesoArtigo - pesoBruto) > TOLERANCE_AUDIT) {
+                        const diff = (pesoArtigo - pesoBruto).toFixed(3);
+                        resultados.push({
+                            'Nº de artigo': artigoCode,
+                            'Descrição do artigo': artigo['Descrição do artigo'],
+                            'Peso Artigos': artigo[pesoArtigoKey],
+                            'Peso bruto MARA': maraRegistro[pesoBrutoMaraKey],
+                            'Diferença (Artigos - MARA)': diff,
+                            'Unidade de peso': maraRegistro['Unidade de peso'] || 'N/A'
+                        });
+                    }
+                } else {
+                     resultados.push({
+                        'Nº de artigo': artigoCode,
+                        'Descrição do artigo': artigo['Descrição do artigo'],
+                        'Peso Artigos': artigo[pesoArtigoKey],
+                        'Peso bruto MARA': 'NÃO ENCONTRADO',
+                        'Diferença (Artigos - MARA)': 'N/A',
+                        'Unidade de peso': 'N/A'
+                    });
+                }
+                
+                // Cede o controle ao navegador a cada CHUNK_SIZE itens
+                if ((i + 1) % CHUNK_SIZE === 0) {
+                    await yieldToBrowser();
+                }
+            }
+
+            return resultados;
+        }
+
+        function carregarCSV(file) {
+            return new Promise((resolve, reject) => {
+                Papa.parse(file, {
+                    header: true, dynamicTyping: true,
+                    complete: (results) => {
+                        resolve(results.data.filter(row => Object.values(row).some(x => x !== null && x !== '')));
+                    },
+                    error: (error) => { reject(new Error("Erro ao ler o arquivo CSV.")); }
+                });
+            });
+        }
+        function carregarExcel(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    try {
+                        const data = new Uint8Array(e.target.result);
+                        const workbook = XLSX.read(data, { type: 'array' });
+                        const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+                        const json = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+
+                        const headers = json[0];
+                        const rows = json.slice(1).map(row => {
+                            const obj = {};
+                            headers.forEach((header, i) => { obj[header] = row[i]; });
+                            return obj;
+                        });
+                        resolve(rows.filter(row => Object.values(row).some(x => x !== null && x !== '')));
+                    } catch (error) {
+                        reject(new Error("Erro ao ler o arquivo Excel."));
+                    }
+                };
+                reader.onerror = (error) => reject(new Error("Erro de leitura do arquivo."));
+                reader.readAsArrayBuffer(file);
+            });
+        }
+        function indexarMara(dados) {
+            const maraMap = {};
+            const materialKey = MAP_MARA['Material'];
+            dados.forEach(row => {
+                const rawCode = String(row[materialKey]);
+                const materialCode = formatarSKU(rawCode); 
+                maraMap[materialCode] = row;
+            });
+            return maraMap;
+        }
+
+        function consultarMaterial() {
+            const materialInputRaw = document.getElementById('input-material').value.trim();
+            const resultadoDiv = document.getElementById('resultado-consulta');
+            resultadoDiv.innerHTML = ''; 
+
+            if (materialInputRaw === '') {
+                resultadoDiv.innerHTML = '<p class="status-message error"><i class="fas fa-info-circle"></i> Por favor, digite um Nº de artigo para buscar.</p>';
+                return;
+            }
+            
+            const materialInputFormatted = formatarSKU(materialInputRaw);
+
+            if (Object.keys(dadosMaraMap).length === 0 || dadosArtigos.length === 0) {
+                 resultadoDiv.innerHTML = '<p class="status-message error"><i class="fas fa-exclamation-triangle"></i> Os dados não foram carregados. Volte à aba "Carregamento de Arquivos".</p>';
+                return;
+            }
+
+            const artigosEncontrados = dadosArtigos.filter(a => {
+                const artigoCodeFormatted = formatarSKU(a[MAP_ARTIGOS['Nº de artigo']]);
+                return artigoCodeFormatted === materialInputFormatted;
+            });
+
+            if (artigosEncontrados.length === 0) {
+                resultadoDiv.innerHTML = `<p class="status-message error"><i class="fas fa-frown"></i> Nenhum registro encontrado para o Nº de artigo: <strong>${materialInputRaw}</strong> (ou <strong>${materialInputFormatted}</strong>) na planilha ARTIGOS.</p>`;
+                return;
+            }
+
+            const maraRegistro = dadosMaraMap[materialInputFormatted];
+            
+            let html = `<h3>Resultado da Consulta para: ${materialInputFormatted} (Original: ${materialInputRaw})</h3>`;
+            
+            if (!maraRegistro) {
+                html += `<p class="status-message error"><i class="fas fa-exclamation-circle"></i> AVISO: Código <strong>${materialInputFormatted}</strong> encontrado na planilha ARTIGOS, mas <strong>não encontrado</strong> na planilha MARA (Dados mestres incompletos).</p>`;
+            } else {
+                html += `<p class="status-message success" style="background-color: #e6f7ff; color: #0056b3;"><i class="fas fa-check"></i> Registro encontrado nas duas bases. Compare os PESOS destacados.</p>`;
+            }
+
+            html += `<div style="overflow-x: auto;"><table id="tabela-resultado">`;
+
+            // Cabeçalho da Tabela
+            html += `<thead><tr>`;
+            COLUNAS_ARTIGOS.forEach(col => {
+                const isWeight = WEIGHT_HEADERS.includes(col);
+                html += `<th class="header-artigos ${isWeight ? 'header-weight' : ''}">${col}</th>`;
+            });
+            COLUNAS_MARA.forEach(col => {
+                const isWeight = WEIGHT_HEADERS.includes(col);
+                html += `<th class="header-mara ${isWeight ? 'header-weight' : ''}">${col}</th>`;
+            });
+            html += `</tr></thead><tbody>`;
+
+            // Linhas de Dados
+            artigosEncontrados.forEach(artigo => {
+                html += `<tr>`;
+                COLUNAS_ARTIGOS.forEach(col => {
+                    html += `<td>${artigo[col] !== undefined ? artigo[col] : 'N/A'}</td>`;
+                });
+                if (maraRegistro) {
+                    COLUNAS_MARA.forEach(col => {
+                        html += `<td>${maraRegistro[col] !== undefined ? maraRegistro[col] : 'N/A'}</td>`;
+                    });
+                } else {
+                    COLUNAS_MARA.forEach(() => {
+                        html += `<td style="background-color: #f8d7da; color: #721c24;">NÃO ENCONTRADO</td>`;
+                    });
+                }
+                html += `</tr>`;
+            });
+
+            html += `</tbody></table></div>`;
+            resultadoDiv.innerHTML = html;
+        }
+
+        // Função Antiga auditarPesos - MANTIDA AQUI APENAS PARA REFERÊNCIA CASO QUEIRA COMPARAÇÃO
+        /*
+        function auditarPesos() {
+             // ... CÓDIGO SEQUENCIAL ANTIGO
+        }
+        */
+
+        function exibirAuditoria() {
+            const resultadoDiv = document.getElementById('resultado-auditoria');
+            resultadoDiv.innerHTML = ''; 
+
+            if (Object.keys(dadosMaraMap).length === 0 || dadosArtigos.length === 0) {
+                 resultadoDiv.innerHTML = '<p class="status-message error"><i class="fas fa-exclamation-triangle"></i> Os dados não foram carregados. Volte à aba "Carregamento de Arquivos".</p>';
+                return;
+            }
+
+            if (resultadosAuditoria.length === 0) {
+                resultadoDiv.innerHTML = `<p class="status-message success"><i class="fas fa-thumbs-up"></i> Nenhum material encontrado com diferença de Peso/Peso Bruto superior a ${TOLERANCE_AUDIT} nas duas bases!</p>`;
+                return;
+            }
+
+            const totalDiferencas = resultadosAuditoria.length.toLocaleString();
+            
+            resultadoDiv.innerHTML = `<p class="status-message error"><i class="fas fa-exclamation-circle"></i> <strong>${totalDiferencas}</strong> materiais com pesos distintos ou registro ausente na MARA.</p>`;
+
+            let html = `<div style="overflow-x: auto;">
+                <table id="auditoria-tabela" class="display compact" style="width:100%">
+                    <thead>
+                        <tr>
+                            <th>Nº DE ARTIGO</th> 
+                            <th>DESCRIÇÃO DO ARTIGO</th> 
+                            <th>PESO ARTIGOS</th> 
+                            <th>PESO BRUTO MARA</th> 
+                            <th>UNIDADE DE PESO</th> 
+                            <th>DIFERENÇA (ARTIGOS - MARA)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    </tbody>
+                </table>
+            </div>`;
+            resultadoDiv.innerHTML += html; 
+
+            const COLUNAS_AUDITORIA_KEYS = [
+                'Nº de artigo', 
+                'Descrição do artigo', 
+                'Peso Artigos', 
+                'Peso bruto MARA', 
+                'Unidade de peso', 
+                'Diferença (Artigos - MARA)'
+            ];
+
+            const dataTableData = resultadosAuditoria.map(item => {
+                const isNotFound = item['Peso bruto MARA'] === 'NÃO ENCONTRADO';
+                const isSignificantDiff = !isNotFound && Math.abs(parseFloat(item['Diferença (Artigos - MARA)'])) > 0;
+                const diffClass = (isNotFound || isSignificantDiff) ? 'audit-diff' : '';
+
+                return COLUNAS_AUDITORIA_KEYS.map((key, index) => {
+                    let cellContent = item[key];
+                    let cellClass = '';
+
+                    if (index >= 2) { 
+                        cellClass = diffClass;
+                    }
+                    
+                    return `<span class="${cellClass}">${cellContent}</span>`;
+                });
+            });
+
+            if (dataTableAuditoria) {
+                $('#auditoria-tabela').DataTable().destroy();
+                dataTableAuditoria = null;
+            }
+            
+            setTimeout(() => {
+                dataTableAuditoria = $('#auditoria-tabela').DataTable({
+                    data: dataTableData,
+                    columns: COLUNAS_AUDITORIA_KEYS.map(key => ({ title: key })),
+                    pageLength: 20,
+                    lengthMenu: [10, 20, 50, 100],
+                    responsive: true,
+                    language: {
+                        search: "Pesquisar:",
+                        lengthMenu: "Mostrar _MENU_ registros por página",
+                        info: "Mostrando de _START_ a _END_ de _TOTAL_ registros",
+                        infoEmpty: "Mostrando 0 a 0 de 0 registros",
+                        infoFiltered: "(filtrados de _MAX_ registros no total)",
+                        paginate: {
+                            first: "Primeiro",
+                            last: "Último",
+                            next: "Próximo",
+                            previous: "Anterior"
+                        },
+                        zeroRecords: "Nenhum registro encontrado."
+                    },
+                     createdRow: function (row, data, dataIndex) {
+                        $(row).find('td').each(function(colIndex) {
+                            const cellHtml = data[colIndex];
+                            $(this).html(cellHtml);
+                            
+                            if (!$(this).find('span').hasClass('audit-diff')) {
+                                $(this).css('background-color', '#fff8f0');
+                            }
+                        });
+                    }
+                });
+            }, 50);
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('carregamento').style.display = 'block';
+            
+            const statusElement = document.getElementById('status-carregamento');
+            statusElement.className = "status-message success";
+            statusElement.innerHTML = `<i class="fas fa-hourglass-start"></i> Aguardando carregamento dos arquivos...`;
+        });
+
+    </script>
+
+</body>
+</html>

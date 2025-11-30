@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Catálogo de Investigações de Peso - SGC</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        /* Cores baseadas na imagem */
+        :root {
+            --background-color: #f5f5e8; /* Cor de fundo creme/claro */
+            --main-block-color: #4175b5; /* Azul do bloco principal */
+            --button-block-color: #122c4f; /* Azul escuro dos botões */
+            --text-color: #ffffff; /* Texto branco */
+            --border-radius: 40px; /* Grande arredondamento para o bloco principal */
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            /* Centralização total */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 650px; /* Aumentei a largura para o título caber melhor */
+            /* Estilo do bloco principal azul */
+            background-color: var(--main-block-color);
+            border-radius: var(--border-radius);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.25);
+            padding: 80px 40px; /* Padding interno generoso */
+            text-align: center;
+            
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* NOVO ESTILO PARA O TÍTULO */
+        header h1 {
+            color: var(--text-color);
+            font-size: 1.6em;
+            margin: 0 0 50px 0; /* Espaço entre o título e os botões */
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            line-height: 1.3;
+        }
+
+        .menu-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+            width: 90%; 
+        }
+
+        .menu-item {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 80px;
+            
+            /* Estilo dos botões escuros */
+            background-color: var(--button-block-color);
+            color: var(--text-color);
+            text-decoration: none;
+            font-size: 1.1em;
+            font-weight: 600;
+            border-radius: 15px; 
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.5); 
+            transition: background-color 0.2s, transform 0.2s, box-shadow 0.2s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .menu-item:hover {
+            background-color: #1c457f; 
+            transform: translateY(-2px);
+            box-shadow: 0 12px 20px rgba(0, 0, 0, 0.6);
+        }
+        
+        .menu-item i {
+            margin-right: 15px;
+            font-size: 1.2em;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 50px 20px;
+                border-radius: 30px;
+            }
+            header h1 {
+                font-size: 1.3em;
+                margin-bottom: 30px;
+            }
+            .menu-item {
+                height: 70px;
+                font-size: 1em;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <header>
+            <h1>CATÁLOGO DE INVESTIGAÇÕES DE PESO CONFERÊNCIA SGC</h1>
+        </header>
+
+        <div class="menu-grid">
+            
+            <a href="validador_peso.html" id="validador-link" class="menu-item">
+                <i class="fas fa-check-square"></i> CHECK BOX (Validador de Peso)
+            </a>
+            
+            <a href="consulta_auditoria.html" id="consulta-link" class="menu-item">
+                <i class="fas fa-search-dollar"></i> CONSULTA E AUDITORIA
+            </a>
+
+        </div>
+    </div>
+
+</body>
+</html>

@@ -1,0 +1,945 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>📦 CheckBox SGC - Validador de Peso</title>
+    
+    <script src="https://cdn.jsdelivr.net/npm/papaparse@5.3.0/papaparse.min.js"></script>
+    
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f7f8fa;
+            color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+            padding: 20px;
+            margin: 0;
+            box-sizing: border-box;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 95%; 
+            background-color: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+            margin-bottom: 50px;
+            overflow: hidden;
+        }
+
+        header {
+            background-color: #007bff;
+            color: white;
+            padding: 20px 25px;
+            text-align: center;
+        }
+        header h1 { 
+            margin: 0; 
+            font-size: 1.5em; 
+            font-weight: 600;
+        }
+
+        .tabs {
+            display: flex;
+            border-bottom: 2px solid #f0f0f0;
+            background-color: #ffffff;
+        }
+
+        .tab-button {
+            padding: 15px 25px;
+            cursor: pointer;
+            border: none;
+            background-color: transparent;
+            font-size: 1em;
+            font-weight: 600;
+            color: #6c757d;
+            border-bottom: 3px solid transparent;
+            transition: color 0.2s, border-bottom-color 0.2s;
+        }
+
+        .tab-button:hover {
+            color: #007bff;
+        }
+
+        .tab-button.active {
+            color: #007bff;
+            border-bottom-color: #007bff;
+        }
+
+        .tab-content {
+            padding: 0;
+        }
+
+        .form-section {
+            padding: 25px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        .form-section:last-child { 
+            border-bottom: none; 
+        }
+
+        .form-section h2 {
+            margin-top: 0;
+            font-size: 1.3em;
+            color: #005a9c;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            font-weight: 600;
+        }
+        .form-section h2::before {
+            content: '';
+            display: inline-block;
+            width: 5px;
+            height: 1.1em;
+            background-color: #007bff;
+            margin-right: 10px;
+            border-radius: 2px;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            margin-bottom: 15px;
+        }
+        .input-group label {
+            margin-bottom: 5px;
+            font-weight: 500;
+            color: #555;
+            font-size: 0.9em;
+        }
+        .input-group input {
+            padding: 10px 14px;
+            border: 1px solid #ced4da;
+            border-radius: 6px;
+            font-size: 1em;
+            height: 46px;
+            box-sizing: border-box;
+            background-color: #f7f8fa;
+        }
+        .input-group input:focus {
+            outline: none;
+            border-color: #007bff;
+            box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.2);
+        }
+        .input-group input[type="file"] {
+            height: auto;
+        }
+
+        #item-form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr auto;
+            gap: 10px;
+            align-items: flex-end;
+        }
+        #item-form-grid .input-group { margin-bottom: 0; }
+        
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 15px;
+            font-size: 1.1em;
+            font-weight: 600;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        button:hover { background-color: #0069d9; }
+
+        #add-item-btn {
+            background-color: #007bff;
+            color: white;
+            padding: 0;
+            font-size: 1.8em;
+            font-weight: bold;
+            height: 46px;
+            width: 46px;
+            line-height: 46px;
+            text-align: center;
+        }
+        #add-item-btn:hover { background-color: #0069d9; }
+        
+        #validar-caixa-btn {
+            width: 100%;
+            margin-top: 10px;
+            background-color: #28a745;
+            height: 48px;
+            font-size: 1.1em;
+        }
+        #validar-caixa-btn:hover { background-color: #218838; }
+
+        #nova-analise-btn {
+            background-color: #6c757d;
+            width: 100%;
+            margin-top: 20px;
+            font-size: 1.1em;
+        }
+        #nova-analise-btn:hover { background-color: #5a6268; }
+
+        #table-wrapper {
+            width: 100%;
+            overflow-x: auto;
+            margin-top: 20px;
+        }
+        
+        #item-list-table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 500px;
+        }
+        #item-list-table th, #item-list-table td {
+            border: none;
+            padding: 10px 12px;
+            text-align: left;
+            font-size: 0.95em;
+            white-space: nowrap;
+        }
+        #item-list-table th {
+            background-color: #ffffff;
+            color: #888;
+            font-weight: 500;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        #item-list-table td {
+            border-top: 1px solid #f0f0f0;
+            color: #333;
+        }
+        #item-list-table td:last-child { text-align: right; }
+
+        #total-teorico-display {
+            text-align: right;
+            margin-top: 20px;
+            font-size: 1.3em;
+            font-weight: 600;
+            color: #333;
+        }
+        #total-teorico-display span {
+            color: #007bff;
+            font-weight: 700;
+        }
+
+        #resultado-individual {
+            display: none;
+            padding: 25px;
+            background-color: #fdfdfd;
+        }
+        #resultado-individual h2 {
+            margin-top: 0;
+            text-align: center;
+            font-size: 1.6em;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #eee;
+        }
+        .resultado-detalhes p {
+            background-color: #f9f9f9;
+            border: 1px solid #eee;
+            padding: 12px;
+            border-radius: 5px;
+            margin: 12px 0;
+            font-size: 1.1em;
+            line-height: 1.5;
+        }
+        .resultado-detalhes strong { color: #333; }
+
+        .correto #status { color: #28a745; }
+        .incorreto #status { color: #dc3545; }
+        
+        .result-section {
+            padding: 25px;
+        }
+        #table-container {
+            overflow-x: auto; 
+            margin-top: 15px;
+        }
+        #scrollable-body {
+            max-height: 400px;
+            overflow-y: auto;
+            display: block;
+        }
+        .result-table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 1500px;
+        }
+        .result-table th, .result-table td {
+            border: 1px solid #e0e0e0;
+            padding: 10px 12px;
+            text-align: left;
+            font-size: 0.9em;
+            white-space: nowrap; 
+        }
+        .result-table th {
+            background-color: #f0f0f0;
+            font-weight: 600;
+            position: sticky; 
+            top: 0;
+            z-index: 10;
+        }
+        .result-table td.desviar {
+            background-color: #fce8e6; 
+            color: #d93025; 
+            font-weight: 600;
+        }
+        .result-table td.nao-desviar {
+            background-color: #e6fce8; 
+            color: #1e8449; 
+            font-weight: 600;
+        }
+        .filter-input, .filter-select {
+            width: 90%;
+            padding: 5px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+            font-size: 0.9em;
+        }
+        #pagination-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 20px;
+            padding: 10px;
+            border-top: 1px solid #eee;
+        }
+        #pagination-controls button {
+            border: none;
+            padding: 8px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            font-weight: 600;
+            margin: 0 5px;
+        }
+        #pagination-controls button:disabled {
+            background-color: #cccccc !important;
+            cursor: not-allowed;
+        }
+        #prev-page, #first-page {
+            background-color: #dc3545; 
+            color: white;
+        }
+        #next-page, #last-page {
+            background-color: #28a745; 
+            color: white;
+        }
+        #page-info {
+            font-weight: 600;
+            color: #555;
+            flex-grow: 1;
+            text-align: center;
+        }
+        #summary-boxes { display: flex; gap: 20px; margin-bottom: 20px; justify-content: center; }
+        .summary-box { padding: 20px 30px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08); text-align: center; flex: 1; max-width: 300px; }
+        .summary-box h3 { margin-top: 0; font-size: 1.2em; font-weight: 500; }
+        .summary-box p { font-size: 2.5em; font-weight: 700; margin: 5px 0 0; }
+        #summary-divert { background-color: #fff1f0; border: 2px solid #ff4d4f; }
+        #summary-divert p { color: #ff4d4f; }
+        #summary-ok { background-color: #f6ffed; border: 2px solid #52c41a; }
+        #summary-ok p { color: #52c41a; }
+
+        @media (max-width: 600px) {
+            body { padding: 10px; } 
+            .container { max-width: 100%; }
+            .form-section { padding: 20px 15px; }
+            #item-form-grid {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+            #add-item-btn {
+                height: 48px;
+                width: 100%;
+                padding: 0;
+                font-size: 1.8em;
+                line-height: 48px;
+            }
+            header h1 { font-size: 1.3em; }
+            #resultado-individual h2 { font-size: 1.4em; }
+            .resultado-detalhes p { font-size: 1em; }
+            .tab-button {
+                padding: 10px 15px;
+                font-size: 0.9em;
+            }
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <header>
+            <h1>📦 CheckBox SGC - Validador de Peso </h1>
+        </header>
+
+        <div class="tabs">
+            <button class="tab-button active" data-tab="tab-csv">Análise em Lote (CSV)</button>
+            <button class="tab-button" data-tab="tab-individual">Análise Individual</button>
+        </div>
+
+        <div id="tab-csv" class="tab-content">
+            <div class="form-section">
+                <h2>Carregar Arquivo CSV</h2>
+                <p>O Peso Líquido Real é calculado subtraindo-se a Tara do Peso act. (Bruto) e validado contra os limites líquidos.</p>
+                <div class="input-group">
+                    <label for="csv-file">Selecione o arquivo CSV:</label>
+                    <input type="file" id="csv-file" accept=".csv">
+                </div>
+                <p id="validation-info" style="display: none;"></p>
+            </div>
+
+            <div id="result-container" class="result-section" style="display: none;">
+                <h2>Resultados da Validação</h2>
+                
+                <div id="summary-boxes">
+                    <div id="summary-divert" class="summary-box">
+                        <h3>Caixas para Desviar (Reprovadas)</h3>
+                        <p id="diverted-count-display">0</p>
+                    </div>
+                    <div id="summary-ok" class="summary-box">
+                        <h3>Caixas OK (Aprovadas)</h3>
+                        <p id="ok-count-display">0</p>
+                    </div>
+                </div>
+                <div id="table-container">
+                    <table class="result-table">
+                        <thead>
+                            <tr>
+                                <th>Código de barras</th>
+                                <th>Peso act. (Bruto)</th>
+                                <th>Tara (g)</th>
+                                <th>Peso Líq. Real (g)</th>
+                                <th>Limite Mín. Líq. (g)</th>
+                                <th>Limite Máx. Líq. (g)</th>
+                                <th>Tolerância Utilizada (%)</th>
+                                <th>Tolerância (g)</th>
+                                <th>Resultado</th>
+                                <th>Motivo do Desvio</th>
+                                <th>Status Tolerância (g)</th>
+                            </tr>
+                            <tr id="filter-row">
+                                <th><input type="text" class="filter-input" id="filter-codigo-barras" data-column-index="0" placeholder="Filtrar Cód."></th>
+                                <th></th>
+                                <th></th>
+                                <th></th>
+                                <th></th>
+                                <th></th>
+                                <th></th>
+                                <th></th>
+                                <th>
+                                    <select class="filter-select" id="filter-status" data-column-index="8">
+                                        <option value="">Todos</option>
+                                        <option value="Desviar">Desviar</option>
+                                        <option value="Não Desviar">Não Desviar</option>
+                                        <option value="ERRO">ERRO</option>
+                                    </select>
+                                </th>
+                                <th></th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody id="results-table-body">
+                            </tbody>
+                    </table>
+                </div>
+
+                <div id="pagination-controls" style="display: none;">
+                    <button id="first-page">Primeira Página</button>
+                    <button id="prev-page">Página Anterior</button>
+                    <span id="page-info"></span>
+                    <button id="next-page">Próxima Página</button>
+                    <button id="last-page">Última Página</button>
+                </div>
+                
+                <p id="summary-info" style="margin-top: 20px; font-weight: 600; text-align: center;"></p>
+            </div>
+        </div>
+
+        <div id="tab-individual" class="tab-content" style="display:none;">
+            <div class="form-section">
+                <h2>Itens da Caixa</h2>
+                <div id="item-form-grid">
+                    <div class="input-group">
+                        <label for="cod-material">Cód. Material</label>
+                        <input type="text" id="cod-material" placeholder="Ex: 53201">
+                    </div>
+                    <div class="input-group">
+                        <label for="qtd-material">Quantidade</label>
+                        <input type="number" id="qtd-material" placeholder="Ex: 12">
+                    </div>
+                    <div class="input-group">
+                        <label for="peso-unitario">Peso Unitário (g)</label>
+                        <input type="number" id="peso-unitario" placeholder="Ex: 273">
+                    </div>
+                    <button type="button" id="add-item-btn">+</button>
+                </div>
+
+                <div id="table-wrapper">
+                    <table id="item-list-table">
+                        <thead>
+                            <tr>
+                                <th>Cód. Material</th>
+                                <th>Quantidade</th>
+                                <th>Peso Unit. (g)</th>
+                                <th>Peso Total (g)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="item-list-tbody">
+                            </tbody>
+                    </table>
+                </div>
+                
+                <div id="total-teorico-display">
+                    Peso Teórico Total: <span id="peso-teorico-total">0.00g</span>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <h2>Dados da Conferência</h2>
+                <div class="input-group">
+                    <label for="peso-balanca">Peso Atual (Kisoft)</label>
+                    <input type="number" id="peso-balanca" placeholder="Ex: 9776" required>
+                </div>
+                <div class="input-group">
+                    <label for="tara-caixa">Tara da Caixa (g)</label>
+                    <input type="number" id="tara-caixa" placeholder="Ex: 415" required>
+                </div>
+                <button type="button" id="validar-caixa-btn">Validar Caixa</button>
+            </div>
+
+            <div id="resultado-individual">
+                <h2 id="status"></h2>
+                <div class="resultado-detalhes">
+                    <p id="explicacao-info"></p>
+                    <hr>
+                    <p id="actual-info"></p>
+                    <p id="range-info"></p>
+                    <p id="percent-info"></p>
+                    <p id="faixa-info"></p>
+                </div>
+                <button type="button" id="nova-analise-btn">Analisar Nova Caixa</button>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        const toleranceTable = [
+            { min: 0,       max: 50,      percent: 0.9521, label: "0g - 50g" },
+            { min: 50,      max: 500,     percent: 0.2419, label: "50g - 500g" },
+            { min: 500,     max: 1000,    percent: 0.0617, label: "500g - 1.000g" },
+            { min: 1000,    max: 1500,    percent: 0.0395, label: "1.000g - 1.500g" },
+            { min: 1500,    max: 3000,    percent: 0.0376, label: "1.500g - 3.000g" },
+            { min: 3000,    max: 4500,    percent: 0.0281, label: "3.000g - 4.500g" },
+            { min: 4500,    max: 6000,    percent: 0.0227, label: "4.500g - 6.000g" },
+            { min: 6000,    max: 7500,    percent: 0.0227, label: "6.000g - 7.500g" },
+            { min: 7500,    max: 9000,    percent: 0.0205, label: "7.500g - 9.000g" },
+            { min: 9000,    max: 10500,   percent: 0.0179, label: "9.000g - 10.500g" },
+            { min: 10500,   max: 12000,   percent: 0.0160, label: "10.500g - 12.000g" },
+            { min: 12000,   max: 13500,   percent: 0.0153, label: "12.000g - 13.500g" },
+            { min: 13500,   max: 15000,   percent: 0.0145, label: "13.500g - 15.000g" },
+            { min: 15000,   max: 16500,   percent: 0.0134, label: "15.000g - 16.500g" },
+            { min: 16500,   max: 39999,   percent: 0.0125, label: "16.500g+" }
+        ];
+
+        function getToleranceRange(peso) {
+            for (const range of toleranceTable) {
+                if (peso === 0) return null;
+                if (range.min === 0 && peso <= range.max) { return range; }
+                if (peso > range.min && peso <= range.max) { return range; }
+            }
+            if (peso > toleranceTable[toleranceTable.length - 1].max) {
+                return toleranceTable[toleranceTable.length - 1];
+            }
+            return null;
+        }
+
+        const f_csv = (val, prefix = '') => {
+            if (isNaN(val) || val === null) return 'N/A';
+            const sign = val < 0 ? '-' : (prefix === '+' ? '+' : '');
+            const absVal = Math.abs(parseFloat(val));
+            return `${sign}${absVal.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ".")}`;
+        };
+
+        const f_percent_csv = (val) => {
+            if (isNaN(val) || val === null) return 'N/A';
+            return (val * 100).toFixed(4).replace('.', ',') + '%';
+        };
+        
+        const f_individual = (num) => num.toFixed(2).replace('.', ',');
+        const f_percent_individual = (num) => (num * 100).toFixed(2).replace('.', ',');
+
+
+        let allRowsData = []; 
+        let filteredData = []; 
+        const recordsPerPage = 25; 
+        let currentPage = 1;
+
+        function renderPaginationControls() {
+            const totalPages = Math.ceil(filteredData.length / recordsPerPage);
+            const firstButton = document.getElementById('first-page');
+            const prevButton = document.getElementById('prev-page');
+            const nextButton = document.getElementById('next-page');
+            const lastButton = document.getElementById('last-page');
+            const pageInfo = document.getElementById('page-info');
+            const paginationDiv = document.getElementById('pagination-controls');
+
+            if (filteredData.length > recordsPerPage) {
+                paginationDiv.style.display = 'flex';
+                
+                firstButton.disabled = currentPage === 1;
+                prevButton.disabled = currentPage === 1;
+                nextButton.disabled = currentPage >= totalPages;
+                lastButton.disabled = currentPage >= totalPages;
+
+                pageInfo.textContent = `Página ${currentPage} de ${totalPages} (${filteredData.length} resultados)`;
+            } else {
+                paginationDiv.style.display = 'none';
+            }
+        }
+
+        function goToPage(page) {
+            const totalPages = Math.ceil(filteredData.length / recordsPerPage);
+            
+            if (page === 'first') page = 1;
+            if (page === 'last') page = totalPages;
+            
+            if (page >= 1 && page <= totalPages) {
+                currentPage = page;
+                renderTablePage();
+                renderPaginationControls();
+            }
+        }
+
+        function renderTablePage() {
+            const tbody = document.getElementById('results-table-body');
+            tbody.innerHTML = '';
+            
+            const start = (currentPage - 1) * recordsPerPage;
+            const end = start + recordsPerPage;
+            const pageData = filteredData.slice(start, end);
+
+            const fragment = document.createDocumentFragment();
+            pageData.forEach(row => fragment.appendChild(row));
+            tbody.appendChild(fragment);
+
+            document.getElementById('table-container').scrollTop = 0;
+        }
+        
+        function applyFilters() {
+            const codigoBarrasFilter = document.getElementById('filter-codigo-barras').value.toLowerCase();
+            const statusFilter = document.getElementById('filter-status').value; 
+            
+            filteredData = allRowsData.filter(rowData => {
+                const codigoBarras = rowData.cells[0].textContent;
+                const resultado = rowData.cells[8].textContent; 
+
+                const matchesCodigo = codigoBarras.toLowerCase().includes(codigoBarrasFilter);
+                const matchesStatus = statusFilter === "" || resultado === statusFilter; 
+
+                return matchesCodigo && matchesStatus;
+            });
+
+            let currentDivertedCount = 0;
+            let currentNonDivertedCount = 0;
+            filteredData.forEach(row => {
+                if (row.cells[8].textContent === 'Desviar' || row.cells[8].textContent === 'ERRO') {
+                    currentDivertedCount++;
+                } else {
+                    currentNonDivertedCount++;
+                }
+            });
+
+            document.getElementById('diverted-count-display').textContent = currentDivertedCount;
+            document.getElementById('ok-count-display').textContent = currentNonDivertedCount;
+            document.getElementById('summary-info').textContent = `Exibindo ${filteredData.length} resultados de ${allRowsData.length} totais.`;
+            
+            goToPage(1); 
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('filter-codigo-barras').addEventListener('keyup', applyFilters);
+            document.getElementById('filter-status').addEventListener('change', applyFilters);
+
+            document.getElementById('first-page').addEventListener('click', () => goToPage('first'));
+            document.getElementById('prev-page').addEventListener('click', () => goToPage(currentPage - 1));
+            document.getElementById('next-page').addEventListener('click', () => goToPage(currentPage + 1));
+            document.getElementById('last-page').addEventListener('click', () => goToPage('last'));
+            
+            document.getElementById('tab-csv').style.display = 'block';
+
+            document.querySelectorAll('.tab-button').forEach(button => {
+                button.addEventListener('click', function() {
+                    document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+                    document.querySelectorAll('.tab-content').forEach(content => content.style.display = 'none');
+
+                    this.classList.add('active');
+                    document.getElementById(this.dataset.tab).style.display = 'block';
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                });
+            });
+        });
+
+        document.getElementById('csv-file').addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            const infoDiv = document.getElementById('validation-info');
+            const resultContainer = document.getElementById('result-container');
+            
+            document.getElementById('results-table-body').innerHTML = '';
+            allRowsData = []; 
+            filteredData = [];
+
+            resultContainer.style.display = 'none';
+            infoDiv.style.display = 'none';
+            document.getElementById('diverted-count-display').textContent = '0';
+            document.getElementById('ok-count-display').textContent = '0';
+            document.getElementById('summary-info').textContent = '';
+            document.getElementById('pagination-controls').style.display = 'none';
+            
+            if (!file) { return; }
+
+            infoDiv.textContent = `Processando arquivo: ${file.name}...`;
+            infoDiv.style.display = 'block';
+
+            Papa.parse(file, {
+                header: true, dynamicTyping: true, skipEmptyLines: true, delimiter: ";",
+                complete: function(results) {
+                    processData(results.data);
+                    infoDiv.textContent = `Processamento de ${results.data.length} linhas concluído.`;
+                    applyFilters(); 
+                },
+                error: function(error) {
+                    infoDiv.textContent = `Erro ao carregar o arquivo: ${error.message}.`;
+                    console.error("Erro ao carregar o CSV:", error);
+                }
+            });
+        });
+
+        function processData(data) {
+            const resultContainer = document.getElementById('result-container');
+
+            let totalRows = 0;
+            allRowsData = []; 
+
+            data.forEach(row => {
+                const codigoBarras = row['Código de barras'];
+                
+                // FUNÇÃO DE CONVERSÃO CORRIGIDA PARA FORMATO PT-BR/CSV
+                const convertAndParse = (value) => {
+                    if (value === null || value === undefined) return NaN;
+                    let strValue = String(value);
+                    
+                    // 1. Remove separadores de milhar (ponto)
+                    strValue = strValue.replace(/\./g, '');
+                    // 2. Troca o separador decimal (vírgula) por ponto
+                    strValue = strValue.replace(',', '.');
+                    
+                    return parseFloat(strValue);
+                };
+
+                const tara = convertAndParse(row['Tara']);
+                const pesoAct = convertAndParse(row['Peso act.']); 
+                const pesoMinApur = convertAndParse(row['Peso mín. apur.']); 
+                const pesoMaxApur = convertAndParse(row['Peso máx. apur.']); 
+                
+                if (!codigoBarras || isNaN(tara) || isNaN(pesoAct) || isNaN(pesoMinApur) || isNaN(pesoMaxApur)) {
+                    return; 
+                }
+                
+                totalRows++;
+
+                const pesoLiquidoReal = pesoAct - tara;
+
+                let resultado = 'Não Desviar';
+                let cssClass = 'nao-desviar';
+                let motivoDesvio = 'Peso dentro da tolerância';
+                let statusTolerancia = 'Dentro do Limite'; 
+                let toleranciaP = 'N/A';
+                let toleranciaG = 'N/A';
+                
+                const pesoLiquidoTeorico = (pesoMinApur + pesoMaxApur) / 2;
+                
+                const toleranceRange = getToleranceRange(pesoLiquidoTeorico);
+                
+                if (toleranceRange && pesoLiquidoTeorico > 0) {
+                    const toleranciaEmPercentual = toleranceRange.percent;
+                    const toleranciaEmGramas = pesoLiquidoTeorico * toleranciaEmPercentual;
+
+                    toleranciaP = `± ${f_percent_csv(toleranciaEmPercentual)}`;
+                    toleranciaG = `± ${f_csv(toleranciaEmGramas)}g`;
+                }
+
+
+                const isUnderweight = pesoLiquidoReal < pesoMinApur;
+                const isOverweight = pesoLiquidoReal > pesoMaxApur;
+
+                if (isUnderweight || isOverweight) {
+                    resultado = 'Desviar';
+                    cssClass = 'desviar';
+
+                    if (isUnderweight) {
+                        motivoDesvio = 'Abaixo do Mínimo Líquido';
+                        statusTolerancia = `${f_csv(pesoLiquidoReal - pesoMinApur, '+')}g`; 
+                    } else {
+                        motivoDesvio = 'Acima do Máximo Líquido';
+                        statusTolerancia = `${f_csv(pesoLiquidoReal - pesoMaxApur, '+')}g`;
+                    }
+
+                } else {
+                    const margemMin = pesoLiquidoReal - pesoMinApur;
+                    const margemMax = pesoMaxApur - pesoLiquidoReal;
+                    const margemFinal = Math.min(margemMin, margemMax);
+
+                    statusTolerancia = `+${f_csv(margemFinal)}g (Margem)`;
+                }
+
+                const newRow = document.createElement('tr');
+                newRow.innerHTML = `
+                    <td>${codigoBarras}</td>
+                    <td>${f_csv(pesoAct)}g</td>
+                    <td>${f_csv(tara)}g</td>
+                    <td>${f_csv(pesoLiquidoReal)}g</td>
+                    <td>${f_csv(pesoMinApur)}g</td>
+                    <td>${f_csv(pesoMaxApur)}g</td>
+                    <td>${toleranciaP}</td>
+                    <td>${toleranciaG}</td>
+                    <td class="${cssClass}">${resultado}</td>
+                    <td>${motivoDesvio}</td>
+                    <td>${statusTolerancia}</td>
+                `;
+                
+                allRowsData.push(newRow);
+            });
+            
+            if (totalRows > 0) {
+                resultContainer.style.display = 'block';
+            } else {
+                document.getElementById('summary-info').textContent = 'Nenhum dado válido encontrado para análise.';
+                resultContainer.style.display = 'block';
+            }
+        }
+
+
+        let itens = [];
+        let pesoTeoricoTotal = 0;
+        
+        const codInput = document.getElementById('cod-material');
+        const qtdInput = document.getElementById('qtd-material');
+        const pesoUnitInput = document.getElementById('peso-unitario');
+        const tableBody = document.getElementById('item-list-tbody');
+        const totalDisplay = document.getElementById('peso-teorico-total');
+        const resultadoDiv = document.getElementById('resultado-individual');
+        
+        document.getElementById('add-item-btn').addEventListener('click', function() {
+            const cod = codInput.value;
+            const qtd = parseFloat(qtdInput.value);
+            const pesoUnit = parseFloat(pesoUnitInput.value);
+
+            if (!cod || isNaN(qtd) || isNaN(pesoUnit) || qtd <= 0 || pesoUnit <= 0) {
+                alert("Por favor, preencha Cód. Material, Quantidade (> 0) e Peso Unitário (> 0) corretamente.");
+                return;
+            }
+            const item = { cod, qtd, pesoUnit, pesoTotal: qtd * pesoUnit };
+            itens.push(item);
+
+            const newRow = tableBody.insertRow();
+            newRow.innerHTML = `
+                <td>${item.cod}</td>
+                <td>${item.qtd}</td>
+                <td>${f_individual(item.pesoUnit)}</td>
+                <td>${f_individual(item.pesoTotal)}</td>
+            `;
+
+            pesoTeoricoTotal = pesoTeoricoTotal + item.pesoTotal;
+            totalDisplay.textContent = `${f_individual(pesoTeoricoTotal)}g`;
+
+            codInput.value = '';
+            qtdInput.value = '';
+            pesoUnitInput.value = '';
+            codInput.focus();
+        });
+
+
+        document.getElementById('validar-caixa-btn').addEventListener('click', function() {
+            const pesoBalanca = parseFloat(document.getElementById('peso-balanca').value);
+            const taraCaixa = parseFloat(document.getElementById('tara-caixa').value);
+
+            if (pesoTeoricoTotal <= 0) {
+                alert("Nenhum item foi adicionado. Adicione itens para calcular o Peso Teórico.");
+                return;
+            }
+            if (isNaN(pesoBalanca) || isNaN(taraCaixa)) {
+                alert("Por favor, preencha o Peso Atual (Kisoft) e a Tara.");
+                return;
+            }
+
+            const toleranceRange = getToleranceRange(pesoTeoricoTotal);
+            if (toleranceRange === null) {
+                 alert("Não foi possível encontrar uma faixa de tolerância para o Peso Teórico calculado ou o peso é 0g.");
+                return;
+            }
+            
+            const tolerancePercent = toleranceRange.percent;
+            const toleranceLabel = toleranceRange.label;
+            const toleranceGrams = pesoTeoricoTotal * tolerancePercent;
+            const pesoMinAceitavel = pesoTeoricoTotal - toleranceGrams;
+            const pesoMaxAceitavel = pesoTeoricoTotal + toleranceGrams;
+            const pesoNetReal = pesoBalanca - taraCaixa;
+            const isCorreto = (pesoNetReal >= pesoMinAceitavel) && (pesoNetReal <= pesoMaxAceitavel);
+
+            const statusEl = document.getElementById('status');
+            const rangeInfoEl = document.getElementById('range-info');
+            const actualInfoEl = document.getElementById('actual-info');
+            const percentInfoEl = document.getElementById('percent-info');
+            const faixaInfoEl = document.getElementById('faixa-info');
+            const explicacaoInfoEl = document.getElementById('explicacao-info');
+
+            resultadoDiv.classList.remove('correto', 'incorreto');
+            
+            actualInfoEl.innerHTML = `<strong>Peso Líquido Real:</strong> ${f_individual(pesoNetReal)}g (Balança ${f_individual(pesoBalanca)}g - Tara ${f_individual(taraCaixa)}g)`;
+            rangeInfoEl.innerHTML = `<strong>Intervalo Aceitável:</strong> ${f_individual(pesoMinAceitavel)}g - ${f_individual(pesoMaxAceitavel)}g`;
+            percentInfoEl.innerHTML = `<strong>Percentual Aplicado:</strong> ${f_percent_individual(tolerancePercent)}% (± ${f_individual(toleranceGrams)}g)`;
+            faixaInfoEl.innerHTML = `<strong>Regra de Cálculo:</strong> O peso teórico (${f_individual(pesoTeoricoTotal)}g) usou a faixa de tolerância "${toleranceLabel}".`;
+
+            if (isCorreto) {
+                statusEl.textContent = 'CAIXA APROVADA (NÃO DEVE DESVIAR)';
+                resultadoDiv.classList.add('correto');
+                explicacaoInfoEl.innerHTML = `<strong>Justificativa:</strong> O peso líquido real (<strong>${f_individual(pesoNetReal)}g</strong>) está <strong>dentro</strong> do intervalo de tolerância aceitável.`;
+            } else {
+                statusEl.textContent = 'CAIXA REPROVADA (DEVE DESVIAR)';
+                resultadoDiv.classList.add('incorreto');
+                if (pesoNetReal < pesoMinAceitavel) {
+                    explicacaoInfoEl.innerHTML = `<strong>Justificativa:</strong> O peso líquido real (<strong>${f_individual(pesoNetReal)}g</strong>) está <strong>abaixo</strong> do mínimo aceitável de <strong>${f_individual(pesoMinAceitavel)}g</strong>.`;
+                } else {
+                    explicacaoInfoEl.innerHTML = `<strong>Justificativa:</strong> O peso líquido real (<strong>${f_individual(pesoNetReal)}g</strong>) está <strong>acima</strong> do máximo aceitável de <strong>${f_individual(pesoMaxAceitavel)}g</strong>.`;
+                }
+            }
+            resultadoDiv.style.display = 'block';
+            resultadoDiv.scrollIntoView({ behavior: 'smooth' });
+        });
+        
+        document.getElementById('nova-analise-btn').addEventListener('click', function() {
+            itens = [];
+            pesoTeoricoTotal = 0;
+            
+            codInput.value = '';
+            qtdInput.value = '';
+            pesoUnitInput.value = '';
+            
+            document.getElementById('peso-balanca').value = '';
+            document.getElementById('tara-caixa').value = '';
+            
+            tableBody.innerHTML = '';
+            totalDisplay.textContent = '0.00g';
+            
+            resultadoDiv.style.display = 'none';
+            codInput.focus();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+
+    </script>
+</body>
+</html>
